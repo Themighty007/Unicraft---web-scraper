@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unicraft — Company Intelligence Scraper</title>
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --surface: #121826;
+      --surface-2: #182032;
+      --border: #253047;
+      --text: #e5ecf6;
+      --muted: #8b9bb4;
+      --accent: #38bdf8;
+      --accent-2: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --purple: #a78bfa;
+      --radius: 12px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: radial-gradient(circle at top right, #131c2e 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .container { max-width: 1380px; margin: 0 auto; padding: 24px; }
+    header {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      gap: 16px; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--border);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      display: grid; place-items: center; font-weight: 800; color: #07101d;
+    }
+    h1 { margin: 0; font-size: 1.25rem; letter-spacing: -0.02em; }
+    .subtitle { margin: 2px 0 0; font-size: 0.84rem; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: 390px 1fr; gap: 22px; align-items: start; }
+    @media (max-width: 1020px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+    }
+    .card-title {
+      font-size: 0.9rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted); margin: 0 0 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%; background: var(--surface-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px;
+      font-family: inherit; font-size: 0.88rem; outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    textarea { min-height: 82px; resize: vertical; font-family: var(--mono); font-size: 0.8rem; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field { margin-bottom: 13px; }
+    .segmented {
+      display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 9px; padding: 3px; margin-bottom: 14px;
+    }
+    .segmented button {
+      background: transparent; border: none; color: var(--muted);
+      padding: 7px 10px; border-radius: 7px; cursor: pointer; font-weight: 600; font-size: 0.84rem;
+    }
+    .segmented button.active { background: var(--accent); color: #07101d; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+    .chip {
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 999px; padding: 3px 10px; font-size: 0.75rem; cursor: pointer;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--text); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 14px; border-radius: 8px; border: 1px solid transparent;
+      font-weight: 600; font-size: 0.86rem; cursor: pointer; text-decoration: none;
+    }
+    .btn-primary { background: var(--accent); color: #06121e; }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-secondary { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+    .btn-danger { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+    .check-row { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text); cursor: pointer; }
+    .check-row input { width: auto; accent-color: var(--accent); }
+    details {
+      border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px;
+      background: rgba(24,32,50,0.45); margin-bottom: 13px;
+    }
+    summary { cursor: pointer; font-size: 0.84rem; font-weight: 600; color: var(--text); }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    @media (max-width: 720px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+    .kpi {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .kpi-label { font-size: 0.74rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-value { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+    .progress-wrap {
+      height: 8px; background: var(--surface-2); border-radius: 999px;
+      overflow: hidden; border: 1px solid var(--border); margin: 10px 0 8px;
+    }
+    .progress-bar {
+      height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 0.25s ease;
+    }
+    .pill {
+      display: inline-block; padding: 2px 9px; border-radius: 999px;
+      font-size: 0.74rem; font-weight: 600; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--text);
+    }
+    .pill.running { border-color: var(--accent); color: var(--accent); }
+    .pill.completed { border-color: var(--accent-2); color: #86efac; }
+    .pill.failed { border-color: var(--danger); color: #fca5a5; }
+    .log-box {
+      background: #070a10; border: 1px solid var(--border); border-radius: 9px;
+      padding: 10px 12px; font-family: var(--mono); font-size: 0.76rem;
+      max-height: 165px; overflow-y: auto; color: #b6c4d9;
+    }
+    .log-line { margin-bottom: 2px; white-space: pre-wrap; word-break: break-word; }
+    .company-list { display: grid; gap: 14px; margin-top: 16px; }
+    .company-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+    }
+    .company-head {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start;
+      gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    }
+    .company-name { font-size: 1.08rem; font-weight: 700; margin: 0; }
+    .company-url { color: var(--accent); font-size: 0.84rem; text-decoration: none; }
+    .company-url:hover { text-decoration: underline; }
+    .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
+    .meta-box {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px; font-size: 0.82rem;
+    }
+    .meta-box h4 {
+      margin: 0 0 6px; font-size: 0.73rem; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted);
+    }
+    .tag {
+      display: inline-block; margin: 2px 4px 2px 0; padding: 2px 8px;
+      border-radius: 6px; font-size: 0.75rem; background: rgba(56,189,248,0.12);
+      border: 1px solid rgba(56,189,248,0.28); color: #bae6fd;
+    }
+    .tag-purple { background: rgba(167,139,250,0.14); border-color: rgba(167,139,250,0.3); color: #ddd6fe; }
+    .tag-green { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.3); color: #bbf7d0; }
+    .rule-item {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      background: var(--surface-2); padding: 6px 9px; border-radius: 7px; font-size: 0.78rem; margin-top: 6px;
+    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    .tab-btn {
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+      padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.82rem;
+    }
+    .tab-btn.active { border-color: var(--accent); color: var(--text); }
+    .hidden { display: none; }
+    .muted { color: var(--muted); font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-mark">U</div>
+        <div>
+          <h1>Unicraft Web Intelligence Scraper</h1>
+          <p class="subtitle">Multi-level company discovery, extraction, dynamic JS rendering &amp; job scheduler</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="pill" id="apiHealth">API Ready</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left Configuration Panel -->
+      <aside class="card">
+        <div class="card-title">
+          <span>Scrape Configuration</span>
+        </div>
+
+        <div class="segmented">
+          <button type="button" id="modeQueryBtn" class="active" onclick="setInputMode('query')">Search Query</button>
+          <button type="button" id="modeUrlsBtn" onclick="setInputMode('urls')">Seed URLs</button>
+        </div>
+
+        <div id="queryGroup" class="field">
+          <label for="queryInput">Search Query</label>
+          <input type="text" id="queryInput" placeholder="e.g. cloud computing startups in Europe" />
+          <div class="chips">
+            <span class="chip" onclick="document.getElementById('queryInput').value='cloud computing startups in Europe'">Cloud Europe</span>
+            <span class="chip" onclick="document.getElementById('queryInput').value='developer infrastructure startups'">Dev Infra</span>
+            <span class="chip" onclick="document.getElementById('queryInput').value='open source AI tools companies'">AI Tools</span>
+          </div>
+        </div>
+
+        <div id="urlsGroup" class="field hidden">
+          <label for="urlsInput">Seed URLs (one per line)</label>
+          <textarea id="urlsInput" placeholder="https://supabase.com&#10;https://vercel.com"></textarea>
+          <div class="chips">
+            <span class="chip" onclick="fillPresetUrls()">Load Sample Cloud/Dev Companies</span>
+            <span class="chip" onclick="validateInputs()">Check Reachability</span>
+          </div>
+          <div id="validationOutput" class="muted" style="margin-top:6px;"></div>
+        </div>
+
+        <div class="row field">
+          <div>
+            <label for="levelSelect">Extraction Level</label>
+            <select id="levelSelect">
+              <option value="basic">Level 1 — Basic</option>
+              <option value="medium">Level 2 — Medium</option>
+              <option value="advanced" selected>Level 3 — Advanced</option>
+            </select>
+          </div>
+          <div>
+            <label for="renderSelect">Dynamic JS Mode</label>
+            <select id="renderSelect">
+              <option value="auto" selected>Auto (HTTP + Playwright)</option>
+              <option value="static">Static HTTP Only</option>
+              <option value="dynamic">Always Playwright</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row field">
+          <div>
+            <label for="maxCompanies">Max Companies</label>
+            <input type="number" id="maxCompanies" value="4" min="1" max="50" />
+          </div>
+          <div>
+            <label for="maxPages">Pages / Company</label>
+            <input type="number" id="maxPages" value="4" min="1" max="15" />
+          </div>
+        </div>
+
+        <details>
+          <summary>Advanced Options (Rate Limit, Proxy &amp; Enrichment)</summary>
+          <div class="row" style="margin-top:10px;">
+            <div class="field">
+              <label for="delayInput">Min Delay (sec)</label>
+              <input type="number" id="delayInput" value="0.4" step="0.1" min="0" />
+            </div>
+            <div class="field">
+              <label for="concurrencyInput">Concurrency</label>
+              <input type="number" id="concurrencyInput" value="3" min="1" max="10" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="proxyInput">Proxy URL (optional)</label>
+            <input type="text" id="proxyInput" placeholder="http://user:pass@host:port" />
+          </div>
+          <label class="check-row" style="margin-bottom:6px;">
+            <input type="checkbox" id="enrichToggle" checked /> External Enrichment (GitHub &amp; Wikidata)
+          </label>
+          <label class="check-row" style="margin-bottom:6px;">
+            <input type="checkbox" id="robotsToggle" checked /> Respect robots.txt
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="paginationToggle" checked /> Follow Pagination &amp; Sitemaps
+          </label>
+        </details>
+
+        <details>
+          <summary>Custom Extraction Rules (CSS / XPath / Regex)</summary>
+          <div style="margin-top:10px;">
+            <div class="row field">
+              <input type="text" id="ruleName" placeholder="field_name (e.g. hero_cta)" />
+              <select id="ruleType">
+                <option value="css">CSS Selector</option>
+                <option value="xpath">XPath</option>
+                <option value="regex">Regex</option>
+              </select>
+            </div>
+            <div class="field">
+              <input type="text" id="rulePattern" placeholder="Pattern (e.g. a.cta, //h1, SOC\s*2)" />
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addCustomRule()">+ Add Custom Rule</button>
+            <div id="customRulesList"></div>
+          </div>
+        </details>
+
+        <div style="display:grid; gap:8px;">
+          <button type="button" class="btn btn-primary" onclick="startScrapeJob()">Start Scraping Job</button>
+        </div>
+
+        <details style="margin-top:12px; margin-bottom:0;">
+          <summary>Schedule Recurring Job</summary>
+          <div style="margin-top:10px;">
+            <div class="field">
+              <label for="schedName">Schedule Name</label>
+              <input type="text" id="schedName" placeholder="Daily European Cloud Monitor" />
+            </div>
+            <div class="field">
+              <label for="schedInterval">Interval (minutes)</label>
+              <input type="number" id="schedInterval" value="60" min="1" />
+            </div>
+            <button type="button" class="btn btn-secondary" style="width:100%;" onclick="createSchedule()">Save Schedule</button>
+          </div>
+        </details>
+      </aside>
+
+      <!-- Main Workspace -->
+      <main>
+        <div class="tabs">
+          <button class="tab-btn active" id="tabResultsBtn" onclick="switchTab('results')">Live Monitor &amp; Results</button>
+          <button class="tab-btn" id="tabSchedulesBtn" onclick="switchTab('schedules')">Schedules (<span id="schedCount">0</span>)</button>
+          <button class="tab-btn" id="tabHistoryBtn" onclick="switchTab('history')">Job History (<span id="jobCount">0</span>)</button>
+        </div>
+
+        <!-- Results Tab -->
+        <section id="tabResults">
+          <div class="card">
+            <div class="card-title">
+              <span>Active Job <span id="activeJobId" style="color:var(--accent);">—</span></span>
+              <span class="pill" id="activeStatus">Idle</span>
+            </div>
+
+            <div class="kpis">
+              <div class="kpi"><div class="kpi-label">Targets</div><div class="kpi-value" id="kpiTotal">0</div></div>
+              <div class="kpi"><div class="kpi-label">Succeeded</div><div class="kpi-value" style="color:var(--accent-2);" id="kpiSuccess">0</div></div>
+              <div class="kpi"><div class="kpi-label">Errors</div><div class="kpi-value" style="color:var(--warn);" id="kpiErrors">0</div></div>
+              <div class="kpi"><div class="kpi-label">Duration</div><div class="kpi-value" id="kpiDuration">0.0s</div></div>
+            </div>
+
+            <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px;">
+              <span class="muted" id="statusMessage">Configure a query or seed URLs on the left and start a job.</span>
+              <div id="exportActions" class="hidden" style="display:flex; gap:8px;">
+                <a id="dlJson" class="btn btn-secondary btn-sm" target="_blank">Download JSON</a>
+                <a id="dlCsv" class="btn btn-secondary btn-sm" target="_blank">Download CSV</a>
+                <a id="dlMd" class="btn btn-secondary btn-sm" target="_blank">Download Markdown</a>
+              </div>
+            </div>
+
+            <div class="log-box" id="logBox">No active logs yet.</div>
+          </div>
+
+          <div class="company-list" id="companiesContainer"></div>
+        </section>
+
+        <!-- Schedules Tab -->
+        <section id="tabSchedules" class="hidden">
+          <div class="card">
+            <div class="card-title"><span>Scheduled Recurring Jobs</span></div>
+            <div id="schedulesContainer" class="muted">No schedules configured yet.</div>
+          </div>
+        </section>
+
+        <!-- History Tab -->
+        <section id="tabHistory" class="hidden">
+          <div class="card">
+            <div class="card-title"><span>Recent Scraping Runs</span></div>
+            <div id="historyContainer" class="muted">No completed or active runs yet.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    let inputMode = 'query';
+    let customRules = [];
+    let activeJobId = null;
+    let pollTimer = null;
+
+    function setInputMode(mode) {
+      inputMode = mode;
+      document.getElementById('modeQueryBtn').classList.toggle('active', mode === 'query');
+      document.getElementById('modeUrlsBtn').classList.toggle('active', mode === 'urls');
+      document.getElementById('queryGroup').classList.toggle('hidden', mode !== 'query');
+      document.getElementById('urlsGroup').classList.toggle('hidden', mode !== 'urls');
+    }
+
+    function fillPresetUrls() {
+      setInputMode('urls');
+      document.getElementById('urlsInput').value = "https://supabase.com\nhttps://posthog.com\nhttps://vercel.com";
+    }
+
+    function switchTab(tab) {
+      ['results', 'schedules', 'history'].forEach(t => {
+        document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('hidden', t !== tab);
+        document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`).classList.toggle('active', t === tab);
+      });
+      if (tab === 'schedules') loadSchedules();
+      if (tab === 'history') loadJobs();
+    }
+
+    function addCustomRule() {
+      const name = document.getElementById('ruleName').value.trim();
+      const type = document.getElementById('ruleType').value;
+      const pattern = document.getElementById('rulePattern').value.trim();
+      if (!name || !pattern) return;
+      customRules.push({ name, type, pattern, multiple: true });
+      document.getElementById('ruleName').value = '';
+      document.getElementById('rulePattern').value = '';
+      renderCustomRules();
+    }
+
+    function removeRule(idx) {
+      customRules.splice(idx, 1);
+      renderCustomRules();
+    }
+
+    function renderCustomRules() {
+      const box = document.getElementById('customRulesList');
+      box.innerHTML = customRules.map((r, i) => `
+        <div class="rule-item">
+          <span><strong>${escapeHtml(r.name)}</strong> [${r.type}] <code>${escapeHtml(r.pattern)}</code></span>
+          <button type="button" class="btn btn-danger btn-sm" onclick="removeRule(${i})">×</button>
+        </div>
+      `).join('');
+    }
+
+    function collectConfig() {
+      const urlsRaw = document.getElementById('urlsInput').value
+        .split(/\r?\n|,/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      const proxy = document.getElementById('proxyInput').value.trim();
+      const delay = parseFloat(document.getElementById('delayInput').value || '0.4');
+
+      return {
+        query: inputMode === 'query' ? (document.getElementById('queryInput').value.trim() || null) : null,
+        seed_urls: inputMode === 'urls' ? urlsRaw : [],
+        level: document.getElementById('levelSelect').value,
+        render_mode: document.getElementById('renderSelect').value,
+        max_companies: parseInt(document.getElementById('maxCompanies').value || '4', 10),
+        max_pages_per_company: parseInt(document.getElementById('maxPages').value || '4', 10),
+        min_delay_seconds: delay,
+        max_delay_seconds: Math.max(delay, delay + 0.5),
+        concurrency: parseInt(document.getElementById('concurrencyInput').value || '3', 10),
+        proxies: proxy ? [proxy] : [],
+        enrich_external: document.getElementById('enrichToggle').checked,
+        respect_robots: document.getElementById('robotsToggle').checked,
+        follow_pagination: document.getElementById('paginationToggle').checked,
+        follow_sitemap: document.getElementById('paginationToggle').checked,
+        custom_rules: customRules,
+        formats: ["json", "csv", "markdown"]
+      };
+    }
+
+    async function validateInputs() {
+      const urls = document.getElementById('urlsInput').value.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
+      const out = document.getElementById('validationOutput');
+      if (!urls.length) { out.textContent = 'Enter at least one URL.'; return; }
+      out.textContent = 'Checking format and live reachability...';
+      const res = await fetch('/api/validate', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ urls, verify_reachability: true })
+      });
+      const data = await res.json();
+      out.innerHTML = data.map(r => {
+        const badge = r.is_valid_format && r.is_reachable ? 'OK' : 'FAIL';
+        const color = badge === 'OK' ? '#86efac' : '#fca5a5';
+        return `<div style="color:${color};">${escapeHtml(r.raw_input)} → ${badge} (${r.status_code || r.error || ''})</div>`;
+      }).join('');
+    }
+
+    async function startScrapeJob() {
+      const cfg = collectConfig();
+      const res = await fetch('/api/jobs', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(cfg)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.detail || 'Failed to start job');
+        return;
+      }
+      const job = await res.json();
+      activeJobId = job.job_id;
+      switchTab('results');
+      renderJob(job);
+      startPolling();
+      loadJobs();
+    }
+
+    function startPolling() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        if (!activeJobId) return;
+        const res = await fetch(`/api/jobs/${activeJobId}`);
+        if (!res.ok) return;
+        const job = await res.json();
+        renderJob(job);
+        if (job.status === 'completed' || job.status === 'failed') {
+          clearInterval(pollTimer);
+          pollTimer = null;
+          loadJobs();
+        }
+      }, 1000);
+    }
+
+    function renderJob(job) {
+      document.getElementById('activeJobId').textContent = `#${job.job_id}`;
+      const statusEl = document.getElementById('activeStatus');
+      statusEl.textContent = job.status.toUpperCase();
+      statusEl.className = `pill ${job.status}`;
+      document.getElementById('statusMessage').textContent = job.message || job.stage;
+
+      const total = job.total || (job.summary ? job.summary.total_targets : 0);
+      const processed = job.processed || (job.summary ? job.summary.processed_targets : 0);
+      const pct = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : (job.status === 'completed' ? 100 : 10);
+      document.getElementById('progressBar').style.width = `${pct}%`;
+
+      document.getElementById('kpiTotal').textContent = total;
+      document.getElementById('kpiSuccess').textContent = job.summary ? job.summary.succeeded : processed;
+      document.getElementById('kpiErrors').textContent = job.summary ? job.summary.errors.length : 0;
+      document.getElementById('kpiDuration').textContent = job.summary ? `${job.summary.duration_seconds.toFixed(1)}s` : '…';
+
+      const exportBox = document.getElementById('exportActions');
+      if (job.status === 'completed' && job.summary) {
+        exportBox.classList.remove('hidden');
+        exportBox.style.display = 'flex';
+        document.getElementById('dlJson').href = `/api/jobs/${job.job_id}/export/json`;
+        document.getElementById('dlCsv').href = `/api/jobs/${job.job_id}/export/csv`;
+        document.getElementById('dlMd').href = `/api/jobs/${job.job_id}/export/markdown`;
+      } else {
+        exportBox.classList.add('hidden');
+      }
+
+      const logBox = document.getElementById('logBox');
+      if (job.logs && job.logs.length) {
+        logBox.innerHTML = job.logs.map(l =>
+          `<div class="log-line">[${l.timestamp}] <strong>${l.level}</strong> (${escapeHtml(l.logger)}): ${escapeHtml(l.message)}</div>`
+        ).join('');
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+
+      const container = document.getElementById('companiesContainer');
+      if (job.summary && job.summary.companies) {
+        container.innerHTML = job.summary.companies.map(renderCompanyCard).join('');
+      } else if (job.status === 'running') {
+        container.innerHTML = '<div class="card muted">Crawling & extracting company intelligence...</div>';
+      }
+    }
+
+    function renderCompanyCard(c) {
+      const m = c.medium;
+      const a = c.advanced;
+      const socials = m ? Object.entries(m.social_profiles).filter(([,v]) => v) : [];
+      const customEntries = Object.entries(c.custom_fields || {});
+
+      return `
+        <article class="company-card">
+          <div class="company-head">
+            <div>
+              <h3 class="company-name">${escapeHtml(c.company_name)}</h3>
+              <a class="company-url" href="${escapeHtml(c.website_url)}" target="_blank" rel="noopener">${escapeHtml(c.website_url)}</a>
+              ${m && m.tagline ? `<div class="muted" style="margin-top:4px; color:#cbd5e1;">${escapeHtml(m.tagline)}</div>` : ''}
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              ${m && m.industry ? `<span class="tag tag-purple">${escapeHtml(m.industry)}</span>` : ''}
+              ${m && m.year_founded ? `<span class="tag">Est. ${m.year_founded}</span>` : ''}
+              <span class="tag tag-green">${c.pages_crawled.length} page(s)</span>
+            </div>
+          </div>
+
+          ${m && m.description ? `<p style="margin:0 0 10px; font-size:0.86rem; color:#cbd5e1;">${escapeHtml(m.description)}</p>` : ''}
+
+          <div class="meta-grid">
+            <div class="meta-box">
+              <h4>Level 1 — Contact Info</h4>
+              <div><strong>Emails:</strong> ${c.contact.emails.length ? c.contact.emails.map(escapeHtml).join(', ') : '—'}</div>
+              <div><strong>Phones:</strong> ${c.contact.phone_numbers.length ? c.contact.phone_numbers.map(escapeHtml).join(', ') : '—'}</div>
+            </div>
+
+            ${m ? `
+              <div class="meta-box">
+                <h4>Level 2 — Overview &amp; Socials</h4>
+                <div><strong>Location:</strong> ${escapeHtml(m.address || m.location || '—')}</div>
+                <div style="margin-top:4px;"><strong>Socials:</strong> ${socials.length ? socials.map(([k,v]) => `<a class="company-url" href="${escapeHtml(v)}" target="_blank">${k}</a>`).join(' · ') : '—'}</div>
+                ${m.products_services.length ? `<div style="margin-top:6px;">${m.products_services.slice(0,5).map(p => `<span class="tag">${escapeHtml(p)}</span>`).join('')}</div>` : ''}
+              </div>
+            ` : ''}
+
+            ${a ? `
+              <div class="meta-box">
+                <h4>Level 3 — Tech Stack</h4>
+                <div>${a.tech_stack.all_technologies.length ? a.tech_stack.all_technologies.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('') : '—'}</div>
+              </div>
+              <div class="meta-box">
+                <h4>Level 3 — Strategy &amp; Enrichment</h4>
+                <div><strong>Positioning:</strong> ${escapeHtml(a.competitive_landscape.market_positioning || '—')}</div>
+                <div><strong>Competitors:</strong> ${a.competitive_landscape.competitors_mentioned.length ? a.competitive_landscape.competitors_mentioned.map(escapeHtml).join(', ') : '—'}</div>
+                ${a.current_projects.length ? `<div style="margin-top:4px;"><strong>Projects/Focus:</strong> ${a.current_projects.slice(0,3).map(escapeHtml).join(' | ')}</div>` : ''}
+                ${a.enrichment.github_org ? `<div style="margin-top:4px;"><strong>GitHub (${escapeHtml(a.enrichment.github_org)}):</strong> ${a.enrichment.github_public_repos ?? 0} repos · ${a.enrichment.github_top_projects.slice(0,2).map(escapeHtml).join(', ')}</div>` : ''}
+                ${a.enrichment.funding_stage || a.enrichment.company_size ? `<div><strong>Size / Stage:</strong> ${escapeHtml(a.enrichment.company_size || '—')} / ${escapeHtml(a.enrichment.funding_stage || '—')}</div>` : ''}
+              </div>
+            ` : ''}
+          </div>
+
+          ${customEntries.length ? `
+            <div class="meta-box" style="margin-top:10px;">
+              <h4>Custom Rules Output</h4>
+              ${customEntries.map(([k,v]) => `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(Array.isArray(v) ? v.join(', ') : String(v ?? '—'))}</div>`).join('')}
+            </div>
+          ` : ''}
+        </article>
+      `;
+    }
+
+    async function createSchedule() {
+      const name = document.getElementById('schedName').value.trim() || 'Scheduled Scrape';
+      const interval = parseInt(document.getElementById('schedInterval').value || '60', 10);
+      const res = await fetch('/api/schedules', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name, interval_minutes: interval, run_immediately: false, config: collectConfig() })
+      });
+      if (!res.ok) { const err = await res.json(); alert(err.detail || 'Failed'); return; }
+      await loadSchedules();
+      switchTab('schedules');
+    }
+
+    async function loadSchedules() {
+      const res = await fetch('/api/schedules');
+      const items = await res.json();
+      document.getElementById('schedCount').textContent = items.length;
+      const box = document.getElementById('schedulesContainer');
+      if (!items.length) { box.innerHTML = '<span class="muted">No schedules configured yet.</span>'; return; }
+      box.innerHTML = items.map(s => `
+        <div class="rule-item" style="padding:10px 12px; margin-bottom:8px;">
+          <div>
+            <strong>${escapeHtml(s.name)}</strong> · Every ${s.interval_minutes}m · Level: ${s.level} · Runs: ${s.run_count}
+            <div class="muted">Target: ${escapeHtml(s.query || s.seed_urls.join(', '))}</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-secondary btn-sm" onclick="triggerSchedule('${s.schedule_id}')">Run Now</button>
+            <button class="btn btn-secondary btn-sm" onclick="toggleSchedule('${s.schedule_id}')">${s.enabled ? 'Pause' : 'Resume'}</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteSchedule('${s.schedule_id}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function triggerSchedule(id) {
+      const res = await fetch(`/api/schedules/${id}/run`, { method: 'POST' });
+      const job = await res.json();
+      activeJobId = job.job_id;
+      switchTab('results');
+      renderJob(job);
+      startPolling();
+    }
+
+    async function toggleSchedule(id) {
+      await fetch(`/api/schedules/${id}/toggle`, { method: 'POST' });
+      loadSchedules();
+    }
+
+    async function deleteSchedule(id) {
+      await fetch(`/api/schedules/${id}`, { method: 'DELETE' });
+      loadSchedules();
+    }
+
+    async function loadJobs() {
+      const res = await fetch('/api/jobs');
+      const jobs = await res.json();
+      document.getElementById('jobCount').textContent = jobs.length;
+      const box = document.getElementById('historyContainer');
+      if (!jobs.length) { box.innerHTML = '<span class="muted">No jobs executed yet.</span>'; return; }
+      box.innerHTML = jobs.map(j => `
+        <div class="rule-item" style="padding:10px 12px; margin-bottom:8px;">
+          <div>
+            <strong>#${j.job_id}</strong> <span class="pill ${j.status}">${j.status}</span>
+            <span class="muted" style="margin-left:8px;">${escapeHtml(j.config.query || j.config.seed_urls.join(', '))}</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="viewJob('${j.job_id}')">View Results</button>
+        </div>
+      `).join('');
+    }
+
+    async function viewJob(id) {
+      activeJobId = id;
+      const res = await fetch(`/api/jobs/${id}`);
+      const job = await res.json();
+      switchTab('results');
+      renderJob(job);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    loadJobs();
+    loadSchedules();
+  </script>
+</body>
+</html>
