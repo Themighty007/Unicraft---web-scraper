@@ -1,0 +1,16 @@
+# Python & virtual environments
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Generated runtime artifacts (samples/ is intentionally kept tracked)
+outputs/
+logs/
+*.log
+.env
+.DS_Store
+Thumbs.db
