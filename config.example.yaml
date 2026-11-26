@@ -1,0 +1,40 @@
+# Example configuration for Unicraft Web Intelligence Scraper
+# Run with: uv run python main.py scrape --config config.example.yaml
+
+query: "cloud computing startups in Europe"
+seed_urls: []
+max_companies: 5
+level: advanced        # basic | medium | advanced
+render_mode: auto      # static | auto | dynamic
+
+max_pages_per_company: 5
+follow_sitemap: true
+follow_pagination: true
+max_pagination_pages: 3
+
+timeout_seconds: 15.0
+min_delay_seconds: 0.4
+max_delay_seconds: 1.2
+max_retries: 2
+concurrency: 3
+
+proxies: []
+respect_robots: true
+verify_reachability: true
+enrich_external: true
+
+output_dir: outputs
+formats:
+  - json
+  - csv
+  - markdown
+
+custom_rules:
+  - name: hero_headline
+    type: css
+    pattern: "h1"
+    multiple: false
+  - name: security_certifications
+    type: regex
+    pattern: "\\b(?:SOC\\s*2|ISO\\s*27001|GDPR|HIPAA)\\b"
+    multiple: true
